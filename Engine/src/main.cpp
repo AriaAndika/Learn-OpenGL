@@ -20,18 +20,24 @@ void processInput(GLFWwindow* window) {
 // vertex shader source code
 const char* vertexShaderSource = 
 "#version 330 core\n"
-"layout (location = 0) in vec3 aPos;\n"
+"layout (location = 0) in vec3 aPos;\n" // get first 3 value in a vertex
+"layout (location = 1) in vec3 aCol;\n" // get second 3 value in a vertex
+"out vec3 oCol;\n"
+"uniform vec2 customPos;\n"
 "void main()\n"
 "{\n"
-"   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+"   gl_Position = vec4(aPos.x, aPos.y + customPos.x, aPos.z, 1.0);\n"
+"	oCol = aCol;\n"
 "}\0";
 
 const char* fragmentShaderSource =
 "#version 330 core\n"
 "out vec4 FragColor;\n"
+"in vec3 oCol;\n"
+//"uniform vec4 customColor;\n"
 "void main()\n"
 "{\n"
-"	FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+"	FragColor = vec4(oCol, 1.0f);\n"
 "}\n";
 
 void CreateShader(unsigned int shaderId, const bool isVertex) {
@@ -102,15 +108,21 @@ int main()
 
 	// vertex data
 	float vertices[] = {
-		 0.5f,  0.5f, 0.0f,  // top right
-		 0.5f, -0.5f, 0.0f,  // bottom right
-		-0.5f, -0.5f, 0.0f,  // bottom left
-		-0.5f,  0.5f, 0.0f   // top left 
+		// positions		 // colors
+		 0.5f,  0.5f, 0.0f,  1.0f, 0.0f, 0.0f,
+		 0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,
+		-0.5f, -0.5f, 0.0f,  0.0f, 0.0f, 1.0f,
+		-0.5f,  0.5f, 0.0f,  1.0f, 1.0f, 0.0f
+
+		/*-0.5f,  0.5f,  .0f,
+		 0.0f,  1.0f,  .0f,
+		-1.0f,  1.0f,  .0f*/
 	};
 	// triangles data
 	unsigned int indices[] = {  // note that we start from 0!
 		0, 1, 3,   // first triangle
-		1, 2, 3    // second triangle
+		1, 2, 3,   // second triangle
+		4, 5, 6
 	};
 
 	// VERTEX BUFFER
@@ -166,19 +178,20 @@ int main()
 
 	// LAYOUTS
 	// how is the format of our vertex variable will be
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	// glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	//											   VVV => size of data in one vertex
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
 	// 0. copy our vertices array in a buffer for OpenGL to use
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 	// 1. then set the vertex attributes pointers
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float) ));
+	glEnableVertexAttribArray(1);
 	// 2. use our shader program when we want to render an object
 	glUseProgram(shaderProgram);
 	// 3. now draw the object 
-	// someOpenGLFunctionThatDrawsOurTriangle();
 
 
 	// ..:: Drawing code (in render loop) :: ..
@@ -196,10 +209,25 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		// draw triangles
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, sizeof(indices), GL_UNSIGNED_INT, 0); // count of vertex drawn
+
+		// wiremode
+		// glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+		// UNIFORM
+		float timeValue = glfwGetTime();
+		float p = (cos(timeValue) / 2.0f);
+		float r = (cos(timeValue) / 2.0f) + 0.5f;
+		float g = (sin(timeValue) / 2.0f) + 0.5f;
+		// access uniform id
+		// int vertexColorLocation = glGetUniformLocation(shaderProgram, "customColor");
+		int customPosId = glGetUniformLocation(shaderProgram, "customPos");
+		// use uniform id to change it
+		// glUniform4f(vertexColorLocation, r, g, 0.0f, 1.0f);
+		glUniform2f(customPosId, p, 0);
 
 		// call process input
-		processInput(window);
+		// processInput(window);
 
 		// swap the buffers and get event
 		glfwSwapBuffers(window);
