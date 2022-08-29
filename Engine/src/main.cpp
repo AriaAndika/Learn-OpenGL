@@ -2,9 +2,14 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-#include "Shader.h"
 #define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
+#include "stb/stb_image.h"
+#include "Shader.h"
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtc/type_ptr.hpp"
+
+#include "Mono.h"
 
 // on window resize callback (stretch the context)
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
@@ -53,17 +58,6 @@ int main()
 		
 #pragma region Rendering
 
-	// vertex data
-	//float vertices[] = {
-	//	// positions		 // colors
-	//	-0.5f,  1.0f, 0.0f,  0.0f, 0.0f, 1.0f,
-	//	 0.5f,  1.0f, 0.0f,  0.0f, 1.0f, 0.0f,
-
-	//	 0.0f,  0.0f, 0.0f,  1.0f, 0.0f, 0.0f,
-
-	//	-0.5f, -1.0f, 0.0f,  0.0f, 1.0f, 0.0f,
-	//	 0.5f, -1.0f, 0.0f,  0.0f, 0.0f, 1.0f
-	//};
 	float vertices[] = {
 		-0.5f,  1.0f,  0.0f, 0.0f, 1.0f, 0.0f,  0.0f, 0.0f,
 		 0.5f,  1.0f,  0.0f, 1.0f, 0.0f, 0.0f,  7.0f, 0.0f,
@@ -74,9 +68,20 @@ int main()
 		 0.5f, -1.0f,  0.0f, 1.0f, 0.0f, 0.0f,  7.0f, 0.0f
 	};						
 	// triangles data
-	unsigned int indices[] = {  // note that we start from 0!
+	unsigned int indices[] = {
 		0, 2, 1,
 		2, 3, 4
+	};
+	
+	float vertSqr[] = {
+		 0.5, -0.5, 0.0,  0.0, 1.0, 0.0,   1.0,  0.0,
+		-0.5, -0.5, 0.0,  0.0, 1.0, 0.0,   0.0,  0.0,
+		 0.5,  0.5, 0.0,  0.0, 1.0, 0.0,   1.0,  1.0,
+		-0.5,  0.5, 0.0,  0.0, 1.0, 0.0,   0.0,  1.0
+	};
+	unsigned int indSqr[] = {
+		0, 2, 3,
+		0, 3, 1
 	};
 
 	// VERTEX BUFFER
@@ -89,12 +94,12 @@ int main()
 	unsigned int VBO;
 	glGenBuffers(1, &VBO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertSqr), vertSqr, GL_STATIC_DRAW);
 
 	unsigned int EBO;
 	glGenBuffers(1, &EBO);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);										
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indSqr), indSqr, GL_STATIC_DRAW);
 
 	// for position
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
@@ -105,7 +110,7 @@ int main()
 	// for tex coord
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
 	glEnableVertexAttribArray(2);
-
+	
 
 	// SHADER
 	Shader ourShader("res/Shaders/Basic.shader");
@@ -138,6 +143,21 @@ int main()
 	glBindTexture(GL_TEXTURE_2D, texture);
 	glBindVertexArray(VAO);
 
+	
+	/// GL MATH
+	glm::mat4 trans = glm::mat4(1.0f);
+	trans =  glm::scale(glm::mat4(1.0f), glm::vec3(1, 2, 1));
+	unsigned int transformLoc = glGetUniformLocation(ourShader.ID, "transform");
+
+	// all glm function  are relative
+	// glm::translate
+	// glm::rotate
+	// glm::scale
+
+	// glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
+
+	auto rot = 0.0f;
+
 #pragma endregion
 
 	// render loop
@@ -148,14 +168,18 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		// draw triangles
-		glDrawElements(GL_TRIANGLES, sizeof(indices), GL_UNSIGNED_INT, 0); // count of vertex drawn
-
+		glDrawElements(GL_TRIANGLES, sizeof(indSqr), GL_UNSIGNED_INT, 0); // count of vertex drawn
 		
 		
-		// UNIFORM
-		auto time = sin(glfwGetTime()) / 2;
-		ourShader.setFloat("Input", time, 0.0f);
-		ourShader.setFloat("offset", time * 7, 0.0f);
+		//trans = glm::rotate(trans, glm::radians(1.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
+		
+		//// UNIFORM
+		float _sin = sin(glfwGetTime());
+		float _cos = cos(glfwGetTime());
+		//ourShader.setFloat("uOffset", _sin, .0f);
+		//ourShader.setFloat("offset", .0f, _cos * 10);
+		trans = glm::scale(glm::mat4(1.0f), glm::vec3(_sin, _cos, 1));
 
 		// call process input
 		// processInput(window);

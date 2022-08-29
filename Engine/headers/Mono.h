@@ -1,19 +1,12 @@
-#ifndef MONO_H
-#define MONO_H
+#pragma once
 
 #include <iostream>
+#include <variant>
 
-void p(const char* x) {
-	std::cout << x << std::endl;
-}
-
-
-struct vec3 {
-	float x;
-	float y;
-	float z;
-};
-
-
-
-#endif
+void p(char* x);
+void p(int& x);
+void p(float& x);
+void p(float* t);
+//void p(char* x);
+//void p(char* x);
+//void p(char* x);

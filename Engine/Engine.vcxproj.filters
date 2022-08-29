@@ -24,6 +24,9 @@
     <ClCompile Include="src\Shader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Mono.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="headers\Shader.h">
@@ -32,16 +35,11 @@
     <ClInclude Include="headers\Mono.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\stb_image.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\Shaders\Basic.shader" />
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="res\Textures\Image.jpg">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="res\Textures\wall.jpg">
-      <Filter>Resource Files</Filter>
-    </Image>
   </ItemGroup>
 </Project>
